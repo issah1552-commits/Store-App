@@ -2,7 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
+use App\Services\AppNavigationService;
+use App\Services\LocationContextService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,14 +37,40 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        $user = $request->user()?->loadMissing([
+            'role.permissions:id,name',
+            'defaultLocation:id,name,code,type,region_name',
+            'assignedLocations:id,name,code,type,region_name',
+            'permissionOverrides.permission:id,name',
+        ]);
+        $selectedLocation = $user ? app(LocationContextService::class)->resolveSelectedLocation($request, $user) : null;
 
         return array_merge(parent::share($request), [
-            ...parent::share($request),
             'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
+            'app' => [
+                'currency' => 'TZS',
+                'timezone' => 'Africa/Dar_es_Salaam',
+            ],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'is_active' => $user->is_active,
+                    'role' => $user->role ? [
+                        'name' => $user->role->name,
+                        'display_name' => $user->role->display_name,
+                    ] : null,
+                    'default_location' => $user->defaultLocation,
+                    'assigned_locations' => $user->assignedLocations,
+                    'permissions' => $user->role?->permissions?->pluck('name')->values() ?? [],
+                ] : null,
+            ],
+            'navigation' => $user ? app(AppNavigationService::class)->forUser($user) : [],
+            'location_context' => [
+                'selected_location' => $selectedLocation,
             ],
         ]);
     }

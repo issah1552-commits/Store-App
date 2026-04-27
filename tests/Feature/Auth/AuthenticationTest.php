@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -22,7 +23,20 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'login' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_users_can_authenticate_using_their_username()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'login' => $user->username,
             'password' => 'password',
         ]);
 
@@ -35,10 +49,27 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'email' => $user->email,
+            'login' => $user->email,
             'password' => 'wrong-password',
         ]);
 
+        $this->assertGuest();
+    }
+
+    public function test_inactive_users_can_not_authenticate()
+    {
+        $user = User::factory()->create([
+            'is_active' => false,
+            'status' => UserStatus::Inactive,
+        ]);
+
+        $response = $this->from('/login')->post('/login', [
+            'login' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect('/login');
+        $response->assertSessionHasErrors('login');
         $this->assertGuest();
     }
 
