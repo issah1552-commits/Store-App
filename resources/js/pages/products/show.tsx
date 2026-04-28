@@ -3,9 +3,14 @@ import { StatusBadge } from '@/components/shared/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { formatCurrencyTZS } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
+
+function formatMeters(value: number | string | null | undefined): string {
+    const meters = Number(value ?? 0);
+
+    return `${Number.isFinite(meters) ? meters.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'} m`;
+}
 
 export default function ProductShow({ product, canEdit }: { product: any; canEdit: boolean }) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -22,7 +27,7 @@ export default function ProductShow({ product, canEdit }: { product: any; canEdi
 
                 <Card className="rounded-2xl shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Variants</CardTitle>
+                        <CardTitle>Sub Products</CardTitle>
                         {canEdit ? (
                             <Button asChild variant="outline">
                                 <Link href={route('products.edit', product.id)}>Edit Product</Link>
@@ -32,13 +37,16 @@ export default function ProductShow({ product, canEdit }: { product: any; canEdi
                     <CardContent className="space-y-4">
                         {product.variants.map((variant: any) => {
                             const totalStock = variant.stocks.reduce((sum: number, stock: any) => sum + stock.quantity, 0);
+                            const totalMeters = totalStock * Number(variant.meter_length ?? 0);
 
                             return (
                                 <div key={variant.id} className="rounded-2xl border border-border/70 p-4">
                                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                         <div>
-                                            <div className="text-lg font-semibold">{variant.color} / {variant.meter_length}m</div>
-                                            <div className="text-sm text-muted-foreground">{variant.sku}</div>
+                                            <div className="text-lg font-semibold">{variant.color}</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {variant.sku} / {Number(variant.meter_length).toLocaleString()} meters per roll
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <StatusBadge status={totalStock === 0 ? 'rejected' : totalStock <= variant.low_stock_threshold ? 'partially_received' : 'completed'} />
@@ -48,12 +56,12 @@ export default function ProductShow({ product, canEdit }: { product: any; canEdi
 
                                     <div className="mt-4 grid gap-4 md:grid-cols-3">
                                         <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                                            <div className="text-muted-foreground">Retail Price</div>
-                                            <div className="mt-1 font-semibold">{formatCurrencyTZS(variant.retail_price_tzs)}</div>
+                                            <div className="text-muted-foreground">Total Rolls</div>
+                                            <div className="mt-1 font-semibold">{totalStock.toLocaleString()} rolls</div>
                                         </div>
                                         <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                                            <div className="text-muted-foreground">Wholesale Price</div>
-                                            <div className="mt-1 font-semibold">{formatCurrencyTZS(variant.wholesale_price_tzs)}</div>
+                                            <div className="text-muted-foreground">Total Meters</div>
+                                            <div className="mt-1 font-semibold">{formatMeters(totalMeters)}</div>
                                         </div>
                                         <div className="rounded-xl bg-muted/40 p-3 text-sm">
                                             <div className="text-muted-foreground">Threshold</div>

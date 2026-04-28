@@ -4,6 +4,7 @@ import { PaginationLinks } from '@/components/shared/pagination-links';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { clickableLinkClassName } from '@/lib/link-styles';
 import { type BreadcrumbItem, type PaginatedResponse } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 
@@ -42,7 +43,7 @@ export default function InternalMovementIndex({ movements, canCreate }: { moveme
                                         {movements.data.map((movement) => (
                                             <tr key={movement.id} className="border-b border-border/60 last:border-b-0">
                                                 <td className="px-6 py-4 font-medium">
-                                                    <Link href={route('internal-movements.show', movement.id)} className="hover:underline">
+                                                    <Link href={route('internal-movements.show', movement.id)} className={clickableLinkClassName}>
                                                         {movement.code}
                                                     </Link>
                                                 </td>

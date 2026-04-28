@@ -18,7 +18,7 @@ class RolePermissionSeeder extends Seeder
                 'products.update',
                 'products.delete',
             ],
-            'stores' => ['stores.view'],
+            'stores' => ['stores.view', 'stores.create', 'stores.shutdown'],
             'transfers' => [
                 'transfers.view',
                 'transfers.create',

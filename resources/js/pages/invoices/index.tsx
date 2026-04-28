@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/shared/status-badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrencyTZS } from '@/lib/format';
+import { clickableLinkClassName } from '@/lib/link-styles';
 import { type BreadcrumbItem, type PaginatedResponse } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 
@@ -48,7 +49,7 @@ export default function InvoiceIndex({ invoices, canCreate }: { invoices: Pagina
                                         {invoices.data.map((invoice) => (
                                             <tr key={invoice.id} className="border-b border-border/60 last:border-b-0">
                                                 <td className="px-6 py-4 font-medium">
-                                                    <Link href={route('invoices.show', invoice.id)} className="hover:underline">
+                                                    <Link href={route('invoices.show', invoice.id)} className={clickableLinkClassName}>
                                                         {invoice.invoice_number}
                                                     </Link>
                                                 </td>

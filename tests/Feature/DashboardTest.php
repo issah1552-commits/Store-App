@@ -50,7 +50,7 @@ class DashboardTest extends TestCase
             ->get('/dashboard?location_id='.$location->id)
             ->assertOk()
             ->assertJsonPath('props.filters.location_id', $location->id)
-            ->assertJsonPath('props.metrics.cards.0.label', 'Products in Store');
+            ->assertJsonPath('props.metrics.cards.0.label', 'Total Products');
     }
 
     public function test_shop_users_cannot_filter_the_dashboard_to_an_unauthorized_location(): void

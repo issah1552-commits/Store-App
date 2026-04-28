@@ -22,6 +22,9 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('stores', [LocationController::class, 'index'])->name('stores.index');
+    Route::get('stores/create', [LocationController::class, 'create'])->name('stores.create');
+    Route::post('stores', [LocationController::class, 'store'])->name('stores.store');
+    Route::post('stores/{location}/toggle-active', [LocationController::class, 'toggleActive'])->name('stores.toggle-active');
 
     Route::resource('products', ProductController::class)->except(['destroy']);
 

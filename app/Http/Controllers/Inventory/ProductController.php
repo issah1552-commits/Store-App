@@ -83,33 +83,17 @@ class ProductController extends Controller
 
                 return [
                     'id' => $variant->id,
-                    'sku' => $variant->sku,
-                    'color' => $variant->color,
                     'meter_length' => $variant->meter_length,
-                    'low_stock_threshold' => $variant->low_stock_threshold,
-                    'retail_price_tzs' => $variant->retail_price_tzs,
-                    'wholesale_price_tzs' => $variant->wholesale_price_tzs,
                     'total_stock' => $totalStock,
-                    'is_low_stock' => $totalStock > 0 && $totalStock <= $variant->low_stock_threshold,
-                    'is_out_of_stock' => $totalStock === 0,
-                    'stocks' => $variant->stocks->map(fn ($stock) => [
-                        'id' => $stock->id,
-                        'bucket' => $stock->bucket->value,
-                        'quantity' => $stock->quantity,
-                        'location' => $stock->location?->name,
-                    ])->values(),
+                    'total_meters' => (float) $variant->meter_length * $totalStock,
                 ];
             });
 
             return [
                 'id' => $product->id,
                 'brand_name' => $product->brand_name,
-                'category' => $product->category?->name,
-                'description' => $product->description,
-                'variants' => $variants,
                 'total_stock' => $variants->sum('total_stock'),
-                'is_low_stock' => $variants->contains('is_low_stock', true),
-                'is_out_of_stock' => $variants->every('is_out_of_stock'),
+                'total_meters' => $variants->sum('total_meters'),
             ];
         });
 

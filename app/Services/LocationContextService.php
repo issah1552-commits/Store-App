@@ -18,12 +18,17 @@ class LocationContextService
                 ->pluck('id');
         }
 
-        return $user->assignedLocations()
+        $locationIds = $user->assignedLocations()
             ->pluck('locations.id')
             ->push($user->default_location_id)
             ->filter()
             ->unique()
             ->values();
+
+        return Location::query()
+            ->where('is_active', true)
+            ->whereIn('id', $locationIds)
+            ->pluck('id');
     }
 
     public function availableLocationsFor(User $user): Collection

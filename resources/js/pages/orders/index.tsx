@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/shared/status-badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrencyTZS } from '@/lib/format';
+import { clickableLinkClassName } from '@/lib/link-styles';
 import { type BreadcrumbItem, type PaginatedResponse } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 
@@ -48,7 +49,10 @@ export default function OrderIndex({ orders, canCreate }: { orders: PaginatedRes
                                         {orders.data.map((order) => (
                                             <tr key={order.id} className="border-b border-border/60 last:border-b-0">
                                                 <td className="px-6 py-4 font-medium">
-                                                    <Link href={route('orders.show', order.id)} className="hover:underline">
+                                                    <Link
+                                                        href={route('orders.show', order.id)}
+                                                        className={clickableLinkClassName}
+                                                    >
                                                         {order.order_number}
                                                     </Link>
                                                 </td>

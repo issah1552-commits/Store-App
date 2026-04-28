@@ -40,9 +40,9 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
                 color: '',
                 meter_length: '',
                 rolls: '1',
-                standard_cost_tzs: '',
-                wholesale_price_tzs: '',
-                retail_price_tzs: '',
+                standard_cost_tzs: '0',
+                wholesale_price_tzs: '0',
+                retail_price_tzs: '0',
                 low_stock_threshold: '5',
             },
         ];
@@ -69,9 +69,9 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
                 color: '',
                 meter_length: '',
                 rolls: '1',
-                standard_cost_tzs: '',
-                wholesale_price_tzs: '',
-                retail_price_tzs: '',
+                standard_cost_tzs: '0',
+                wholesale_price_tzs: '0',
+                retail_price_tzs: '0',
                 low_stock_threshold: '5',
             },
         ]);
@@ -155,7 +155,7 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
 
                             {form.data.variants.map((variant, index) => (
                                 <div key={`${variant.id ?? 'new'}-${index}`} className="rounded-2xl border border-border/70 p-4">
-                                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                                         <div className="grid gap-2">
                                             <Label>Color</Label>
                                             <Input value={variant.color} onChange={(event) => updateVariant(index, 'color', event.target.value)} />
@@ -175,28 +175,32 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
                                                 <Input value={variant.sku ?? 'Generated automatically'} readOnly />
                                             </div>
                                         )}
+                                        <div className="grid gap-2">
+                                            <Label>Low Stock Threshold</Label>
+                                            <Input type="number" min="0" value={variant.low_stock_threshold} onChange={(event) => updateVariant(index, 'low_stock_threshold', event.target.value)} />
+                                        </div>
                                         <div className="flex items-end">
                                             <Button type="button" variant="ghost" className="text-red-600 hover:text-red-700" onClick={() => removeVariant(index)} disabled={form.data.variants.length === 1}>
                                                 Remove
                                             </Button>
                                         </div>
 
-                                        <div className="grid gap-2">
-                                            <Label>Standard Cost (TZS)</Label>
-                                            <Input type="number" min="0" value={variant.standard_cost_tzs} onChange={(event) => updateVariant(index, 'standard_cost_tzs', event.target.value)} />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>Wholesale Price (TZS)</Label>
-                                            <Input type="number" min="0" value={variant.wholesale_price_tzs} onChange={(event) => updateVariant(index, 'wholesale_price_tzs', event.target.value)} />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>Retail Price (TZS)</Label>
-                                            <Input type="number" min="0" value={variant.retail_price_tzs} onChange={(event) => updateVariant(index, 'retail_price_tzs', event.target.value)} />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>Low Stock Threshold</Label>
-                                            <Input type="number" min="0" value={variant.low_stock_threshold} onChange={(event) => updateVariant(index, 'low_stock_threshold', event.target.value)} />
-                                        </div>
+                                        {mode === 'edit' ? (
+                                            <>
+                                                <div className="grid gap-2">
+                                                    <Label>Standard Cost (TZS)</Label>
+                                                    <Input type="number" min="0" value={variant.standard_cost_tzs} onChange={(event) => updateVariant(index, 'standard_cost_tzs', event.target.value)} />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Wholesale Price (TZS)</Label>
+                                                    <Input type="number" min="0" value={variant.wholesale_price_tzs} onChange={(event) => updateVariant(index, 'wholesale_price_tzs', event.target.value)} />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Retail Price (TZS)</Label>
+                                                    <Input type="number" min="0" value={variant.retail_price_tzs} onChange={(event) => updateVariant(index, 'retail_price_tzs', event.target.value)} />
+                                                </div>
+                                            </>
+                                        ) : null}
                                     </div>
                                 </div>
                             ))}
