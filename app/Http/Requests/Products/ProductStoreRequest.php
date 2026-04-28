@@ -15,7 +15,8 @@ class ProductStoreRequest extends FormRequest
     {
         return [
             'brand_name' => ['required', 'string', 'max:255'],
-            'category_id' => ['required', 'exists:categories,id'],
+            'color' => ['required', 'string', 'max:255'],
+            'category_id' => ['nullable', 'exists:categories,id'],
             'description' => ['nullable', 'string'],
             'variants' => ['required', 'array', 'min:1'],
             'variants.*.color' => ['required', 'string', 'max:255'],
@@ -26,5 +27,23 @@ class ProductStoreRequest extends FormRequest
             'variants.*.retail_price_tzs' => ['required', 'numeric', 'gte:0'],
             'variants.*.low_stock_threshold' => ['nullable', 'integer', 'gte:0'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('color') || ! is_array($this->input('variants'))) {
+            return;
+        }
+
+        $color = $this->string('color')->trim()->toString();
+
+        $this->merge([
+            'color' => $color,
+            'variants' => collect($this->input('variants'))
+                ->map(fn ($variant) => is_array($variant)
+                    ? array_merge($variant, ['color' => $variant['color'] ?? $color])
+                    : $variant)
+                ->all(),
+        ]);
     }
 }

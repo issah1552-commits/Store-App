@@ -68,7 +68,7 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $user->role?->permissions?->pluck('name')->values() ?? [],
                 ] : null,
             ],
-            'navigation' => $user ? app(AppNavigationService::class)->forUser($user) : [],
+            'navigation' => $user ? app(AppNavigationService::class)->forUser($user, $selectedLocation) : [],
             'location_context' => [
                 'selected_location' => $selectedLocation,
             ],

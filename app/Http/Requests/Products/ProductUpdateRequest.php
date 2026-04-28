@@ -8,6 +8,8 @@ class ProductUpdateRequest extends ProductStoreRequest
     {
         $rules = parent::rules();
 
+        $rules['color'] = ['nullable', 'string', 'max:255'];
+        $rules['category_id'] = ['required', 'exists:categories,id'];
         $rules['variants.*.id'] = ['nullable', 'integer', 'exists:product_variants,id'];
         $rules['variants.*.rolls'] = ['nullable', 'integer', 'gt:0'];
 

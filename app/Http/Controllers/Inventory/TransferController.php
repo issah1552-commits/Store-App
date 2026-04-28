@@ -33,11 +33,23 @@ class TransferController extends Controller
         $this->authorize('viewAny', Transfer::class);
 
         $user = $request->user();
+        $visibleStatuses = collect([
+            TransferStatus::Draft,
+            TransferStatus::PendingApproval,
+            TransferStatus::Approved,
+            TransferStatus::Closed,
+        ]);
+        $statusFilter = $request->string('status')->toString();
+        $statusFilter = in_array($statusFilter, $visibleStatuses->map->value->all(), true) ? $statusFilter : null;
 
         $transfers = Transfer::query()
             ->with(['sourceLocation:id,name', 'destinationLocation:id,name', 'requester:id,name'])
             ->withCount('items')
-            ->when($request->string('status')->toString(), fn ($query, $status) => $query->where('status', $status))
+            ->when($statusFilter === TransferStatus::Closed->value, fn ($query) => $query->whereIn('status', [
+                TransferStatus::Closed->value,
+                TransferStatus::ClosedWithVariance->value,
+            ]))
+            ->when($statusFilter && $statusFilter !== TransferStatus::Closed->value, fn ($query) => $query->where('status', $statusFilter))
             ->when(! $user->isAdmin(), function ($query) use ($user) {
                 $locationIds = $user->assignedLocations()->pluck('locations.id')->push($user->default_location_id)->filter()->unique();
 
@@ -52,8 +64,8 @@ class TransferController extends Controller
 
         return Inertia::render('transfers/index', [
             'transfers' => $transfers,
-            'statuses' => collect(TransferStatus::cases())->map(fn ($status) => ['label' => Str::headline($status->value), 'value' => $status->value]),
-            'filters' => $request->only(['status']),
+            'statuses' => $visibleStatuses->map(fn ($status) => ['label' => Str::headline($status->value), 'value' => $status->value]),
+            'filters' => ['status' => $statusFilter],
             'canCreate' => $request->user()->can('create', Transfer::class),
         ]);
     }
@@ -172,9 +184,11 @@ class TransferController extends Controller
     public function receive(Transfer $transfer, ReceiveTransferRequest $request, ConfirmTransferReceiptAction $action): RedirectResponse
     {
         $this->authorize('receive', $transfer);
-        $action($transfer, $request->user(), $request->validated('items'), $request->input('notes'));
+        $updatedTransfer = $action($transfer, $request->user(), $request->validated('items'), $request->input('notes'));
 
-        return back()->with('success', 'Transfer receipt confirmed.');
+        return back()->with('success', $updatedTransfer->status === TransferStatus::Closed
+            ? 'Transfer receipt confirmed and closed.'
+            : 'Transfer receipt confirmed.');
     }
 
     public function close(Transfer $transfer, CloseTransferRequest $request, CloseTransferAction $action): RedirectResponse

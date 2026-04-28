@@ -125,7 +125,7 @@ class ProductController extends Controller
         DB::transaction(function () use ($request, $stockService, $auditLogService, $actor) {
             $product = Product::create([
                 'brand_name' => $request->string('brand_name')->toString(),
-                'category_id' => $request->integer('category_id'),
+                'category_id' => $request->integer('category_id') ?: $this->defaultCategoryId(),
                 'description' => $request->input('description'),
                 'is_active' => true,
                 'created_by' => $actor->id,
@@ -253,5 +253,16 @@ class ProductController extends Controller
         });
 
         return redirect()->route('products.show', $product)->with('success', 'Product updated successfully.');
+    }
+
+    protected function defaultCategoryId(): int
+    {
+        return Category::query()->firstOrCreate(
+            ['slug' => 'general'],
+            [
+                'name' => 'General',
+                'description' => 'Default category for products created without a category selection.',
+            ],
+        )->id;
     }
 }

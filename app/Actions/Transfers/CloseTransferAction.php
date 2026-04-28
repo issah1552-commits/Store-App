@@ -28,9 +28,10 @@ class CloseTransferAction
             ]);
         }
 
+        $fromStatus = $transfer->status;
         $transfer->loadMissing('items.productVariant.product', 'destinationLocation');
 
-        return DB::transaction(function () use ($transfer, $actor, $notes) {
+        return DB::transaction(function () use ($transfer, $actor, $notes, $fromStatus) {
             $hasVariance = false;
 
             foreach ($transfer->items as $item) {
@@ -68,7 +69,7 @@ class CloseTransferAction
 
             TransferStatusHistory::create([
                 'transfer_id' => $transfer->id,
-                'from_status' => $transfer->status->value,
+                'from_status' => $fromStatus->value,
                 'to_status' => $newStatus->value,
                 'acted_by' => $actor->id,
                 'reason' => $hasVariance ? 'Transfer closed with variance' : 'Transfer closed',

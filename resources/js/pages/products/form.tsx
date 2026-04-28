@@ -18,6 +18,10 @@ const baseBreadcrumbs: BreadcrumbItem[] = [
     { title: 'Products', href: '/products' },
 ];
 
+function formatMeters(value: number): string {
+    return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} m`;
+}
+
 export default function ProductForm({ mode, categories, product }: ProductFormProps) {
     const breadcrumbs = [
         ...baseBreadcrumbs,
@@ -49,12 +53,14 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
 
     const form = useForm({
         brand_name: product?.brand_name ?? '',
+        color: product?.variants?.[0]?.color ?? '',
         category_id: String(product?.category_id ?? ''),
         description: product?.description ?? '',
         variants: initialVariants,
     });
 
     const totalRolls = form.data.variants.reduce((sum, item) => sum + Number(item.rolls || 0), 0);
+    const totalMeters = form.data.variants.reduce((sum, item) => sum + Number(item.rolls || 0) * Number(item.meter_length || 0), 0);
 
     const updateVariant = (index: number, field: string, value: string) => {
         const nextVariants = [...form.data.variants];
@@ -62,11 +68,22 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
         form.setData('variants', nextVariants);
     };
 
+    const updateProductColor = (value: string) => {
+        form.setData((data) => ({
+            ...data,
+            color: value,
+            variants: data.variants.map((variant) => ({
+                ...variant,
+                color: value,
+            })),
+        }));
+    };
+
     const addVariant = () => {
         form.setData('variants', [
             ...form.data.variants,
             {
-                color: '',
+                color: mode === 'create' ? form.data.color : '',
                 meter_length: '',
                 rolls: '1',
                 standard_cost_tzs: '0',
@@ -112,23 +129,31 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
                                 <InputError message={form.errors.brand_name} />
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="category_id">Category</Label>
-                                <select
-                                    id="category_id"
-                                    value={form.data.category_id}
-                                    onChange={(event) => form.setData('category_id', event.target.value)}
-                                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                                >
-                                    <option value="">Select category</option>
-                                    {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <InputError message={form.errors.category_id} />
-                            </div>
+                            {mode === 'create' ? (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="color">Color</Label>
+                                    <Input id="color" value={form.data.color} onChange={(event) => updateProductColor(event.target.value)} />
+                                    <InputError message={form.errors.color} />
+                                </div>
+                            ) : (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="category_id">Category</Label>
+                                    <select
+                                        id="category_id"
+                                        value={form.data.category_id}
+                                        onChange={(event) => form.setData('category_id', event.target.value)}
+                                        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                                    >
+                                        <option value="">Select category</option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <InputError message={form.errors.category_id} />
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid gap-2">
@@ -155,11 +180,13 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
 
                             {form.data.variants.map((variant, index) => (
                                 <div key={`${variant.id ?? 'new'}-${index}`} className="rounded-2xl border border-border/70 p-4">
-                                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                                        <div className="grid gap-2">
-                                            <Label>Color</Label>
-                                            <Input value={variant.color} onChange={(event) => updateVariant(index, 'color', event.target.value)} />
-                                        </div>
+                                    <div className={`grid gap-4 md:grid-cols-2 ${mode === 'create' ? 'xl:grid-cols-4' : 'xl:grid-cols-5'}`}>
+                                        {mode === 'edit' ? (
+                                            <div className="grid gap-2">
+                                                <Label>Color</Label>
+                                                <Input value={variant.color} onChange={(event) => updateVariant(index, 'color', event.target.value)} />
+                                            </div>
+                                        ) : null}
                                         <div className="grid gap-2">
                                             <Label>Meter Length</Label>
                                             <Input type="number" min="0" step="0.01" value={variant.meter_length} onChange={(event) => updateVariant(index, 'meter_length', event.target.value)} />
@@ -205,7 +232,12 @@ export default function ProductForm({ mode, categories, product }: ProductFormPr
                                 </div>
                             ))}
 
-                            {mode === 'create' ? <div className="rounded-2xl bg-muted/50 px-4 py-3 text-sm font-semibold">Live Total Rolls: {totalRolls}</div> : null}
+                            {mode === 'create' ? (
+                                <div className="grid gap-2 rounded-2xl bg-muted/50 px-4 py-3 text-sm font-semibold">
+                                    <div>Live Total Rolls: {totalRolls.toLocaleString()}</div>
+                                    <div>Live Total Meters: {formatMeters(totalMeters)}</div>
+                                </div>
+                            ) : null}
                         </div>
 
                         <div className="flex justify-end gap-3">

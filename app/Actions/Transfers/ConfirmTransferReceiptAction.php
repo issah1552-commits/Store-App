@@ -85,34 +85,42 @@ class ConfirmTransferReceiptAction
                 return $item->dispatched_quantity >= $approved && $item->received_quantity >= $approved;
             });
 
-            $newStatus = $isFullyReceived ? TransferStatus::Received : TransferStatus::PartiallyReceived;
-
-            $transfer->update([
+            $newStatus = $isFullyReceived ? TransferStatus::Closed : TransferStatus::PartiallyReceived;
+            $timestamp = now();
+            $updates = [
                 'status' => $newStatus,
                 'received_by' => $actor->id,
-                'received_at' => now(),
+                'received_at' => $timestamp,
                 'notes' => $notes ?: $transfer->notes,
-            ]);
+            ];
+
+            if ($isFullyReceived) {
+                $updates['closed_by'] = $actor->id;
+                $updates['closed_at'] = $timestamp;
+                $updates['has_variance'] = false;
+            }
+
+            $transfer->update($updates);
 
             TransferStatusHistory::create([
                 'transfer_id' => $transfer->id,
                 'from_status' => $fromStatus->value,
                 'to_status' => $newStatus->value,
                 'acted_by' => $actor->id,
-                'reason' => 'Transfer receipt confirmed',
+                'reason' => $isFullyReceived ? 'Transfer receipt confirmed and closed' : 'Transfer receipt confirmed',
             ]);
 
             $this->auditLogService->record(
                 $actor,
                 'transfer',
-                'transfer.received',
-                'Confirmed receipt for transfer '.$transfer->code,
+                $isFullyReceived ? 'transfer.received_and_closed' : 'transfer.received',
+                ($isFullyReceived ? 'Confirmed receipt and closed transfer ' : 'Confirmed receipt for transfer ').$transfer->code,
                 $transfer,
                 $transfer->destinationLocation,
-                ['transfer_code' => $transfer->code, 'total_received' => $totalReceived],
+                ['transfer_code' => $transfer->code, 'total_received' => $totalReceived, 'auto_closed' => $isFullyReceived],
             );
 
-            return $transfer->fresh(['items.productVariant.product', 'sourceLocation', 'destinationLocation', 'requester', 'receiver']);
+            return $transfer->fresh(['items.productVariant.product', 'sourceLocation', 'destinationLocation', 'requester', 'receiver', 'closer']);
         });
     }
 }

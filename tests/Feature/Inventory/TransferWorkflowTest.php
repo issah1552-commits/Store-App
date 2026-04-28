@@ -93,7 +93,8 @@ class TransferWorkflowTest extends TestCase
 
         $transfer->refresh();
 
-        $this->assertSame(TransferStatus::Received, $transfer->status);
+        $this->assertSame(TransferStatus::Closed, $transfer->status);
+        $this->assertNotNull($transfer->closed_at);
         $this->assertSame(0, $this->stockQuantity($shop->id, $variant->id, StockBucket::InTransit->value));
         $this->assertSame($shopWholesaleBefore + 5, $this->stockQuantity($shop->id, $variant->id, StockBucket::Wholesale->value));
     }
